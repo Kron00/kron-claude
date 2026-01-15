@@ -13,15 +13,29 @@ Portable Claude Code configuration with persistent memory, skills, and automated
 
 ## Quick Install
 
+### Global (all projects)
 ```bash
 git clone https://github.com/Kron00/kron-claude.git
 cd kron-claude
-chmod +x install.sh
 ./install.sh
 ```
 
+### Project-specific (current directory)
+```bash
+# From within kron-claude repo, or download install.sh
+./install.sh --project
+```
+
+## Config Hierarchy
+
+| Level | Location | Scope |
+|-------|----------|-------|
+| Global | `~/.claude/` | All projects on machine |
+| Project | `<project>/.claude/` | Only that project (overrides global) |
+
 ## What Gets Installed
 
+### Global (`./install.sh`)
 ```
 ~/.claude/
 ├── CLAUDE.md              # Main configuration
@@ -35,6 +49,14 @@ chmod +x install.sh
     ├── log-change.sh      # Hook: auto-log file changes
     ├── discover-services.sh   # Scan projects for services
     └── scan-env-vars.sh   # Find env vars across projects
+```
+
+### Project (`./install.sh --project`)
+```
+your-project/.claude/
+├── CLAUDE.md              # Project-specific config (overrides global)
+├── skills/                # Project-specific skills
+└── commands/              # Project-specific slash commands
 ```
 
 ## Configuration Highlights

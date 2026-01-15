@@ -1,21 +1,160 @@
 #!/bin/bash
 # install.sh - Install kron-claude configuration
-# Usage: ./install.sh
 #
-# This script sets up the complete Claude Code configuration:
-# - CLAUDE.md (main config)
-# - KNOWLEDGE.md (persistent memory)
-# - Skills (document, code-review, test-runner, git-workflow)
-# - Scripts (change logging, service discovery)
-# - Hooks (auto-logging)
+# Usage:
+#   ./install.sh           # Global install to ~/.claude/
+#   ./install.sh --project # Project install to ./.claude/
+#
+# Global install sets up:
+#   - CLAUDE.md, KNOWLEDGE.md, skills, scripts, hooks, claude-mem plugin
+#
+# Project install sets up:
+#   - Project-specific .claude/ directory with CLAUDE.md and optional skills
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+INSTALL_MODE="global"
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --project|-p)
+            INSTALL_MODE="project"
+            shift
+            ;;
+        --help|-h)
+            echo "Usage: ./install.sh [OPTIONS]"
+            echo ""
+            echo "Options:"
+            echo "  (no args)     Global install to ~/.claude/"
+            echo "  --project, -p Project install to ./.claude/ (current directory)"
+            echo "  --help, -h    Show this help message"
+            echo ""
+            echo "Global install includes: CLAUDE.md, KNOWLEDGE.md, skills, scripts, plugins"
+            echo "Project install includes: Project-specific CLAUDE.md template"
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Use --help for usage information"
+            exit 1
+            ;;
+    esac
+done
+
+# Backup existing files
+backup_if_exists() {
+    local file="$1"
+    if [ -f "$file" ]; then
+        local backup="${file}.backup.$(date +%Y%m%d_%H%M%S)"
+        echo "  Backing up to $(basename "$backup")"
+        cp "$file" "$backup"
+    fi
+}
+
+#######################################
+# PROJECT INSTALL
+#######################################
+if [ "$INSTALL_MODE" = "project" ]; then
+    PROJECT_DIR="$(pwd)"
+    CLAUDE_DIR="$PROJECT_DIR/.claude"
+
+    echo "╔══════════════════════════════════════════════════════════════╗"
+    echo "║         kron-claude Project Configuration Installer          ║"
+    echo "╚══════════════════════════════════════════════════════════════╝"
+    echo ""
+    echo "Installing to: $CLAUDE_DIR"
+    echo ""
+
+    # Create .claude directory
+    mkdir -p "$CLAUDE_DIR"
+
+    # Create project CLAUDE.md
+    echo "Creating project CLAUDE.md..."
+    backup_if_exists "$CLAUDE_DIR/CLAUDE.md"
+
+    cat > "$CLAUDE_DIR/CLAUDE.md" << 'PROJECTMD'
+# Project: [PROJECT_NAME]
+
+Project-specific configuration. This overrides global ~/.claude/CLAUDE.md settings.
+
+## Project Overview
+
+- **Description**: [What this project does]
+- **Tech Stack**: [Languages, frameworks, tools]
+- **Repository**: [URL if applicable]
+
+## Build & Test Commands
+
+```bash
+# Build
+[build command]
+
+# Test
+[test command]
+
+# Run
+[run command]
+```
+
+## Project Structure
+
+```
+[key directories and their purposes]
+```
+
+## Coding Conventions
+
+- [Project-specific conventions that override or extend global settings]
+
+## Environment Variables
+
+| Variable | Purpose | Example |
+|----------|---------|---------|
+| | | |
+
+## Important Files
+
+- [Key files and their purposes]
+
+## Notes
+
+- [Any project-specific notes for Claude]
+PROJECTMD
+
+    echo "  ✓ Created $CLAUDE_DIR/CLAUDE.md"
+
+    # Create optional directories
+    mkdir -p "$CLAUDE_DIR/skills"
+    mkdir -p "$CLAUDE_DIR/commands"
+
+    echo ""
+    echo "╔══════════════════════════════════════════════════════════════╗"
+    echo "║              Project Installation Complete!                   ║"
+    echo "╚══════════════════════════════════════════════════════════════╝"
+    echo ""
+    echo "Created:"
+    echo "  $CLAUDE_DIR/"
+    echo "  ├── CLAUDE.md    # Edit this with project-specific info"
+    echo "  ├── skills/      # Add project-specific skills here"
+    echo "  └── commands/    # Add project-specific slash commands here"
+    echo ""
+    echo "Next steps:"
+    echo "  1. Edit .claude/CLAUDE.md with your project details"
+    echo "  2. Add to .gitignore if you don't want to commit: echo '.claude/' >> .gitignore"
+    echo "  3. Or commit to share with team: git add .claude/"
+    echo ""
+    exit 0
+fi
+
+#######################################
+# GLOBAL INSTALL
+#######################################
 CLAUDE_DIR="$HOME/.claude"
 
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║           kron-claude Configuration Installer                 ║"
+echo "║         kron-claude Global Configuration Installer           ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 
@@ -24,16 +163,6 @@ if [ ! -d "$CLAUDE_DIR" ]; then
     echo "Creating $CLAUDE_DIR..."
     mkdir -p "$CLAUDE_DIR"
 fi
-
-# Backup existing files
-backup_if_exists() {
-    local file="$1"
-    if [ -f "$file" ]; then
-        local backup="${file}.backup.$(date +%Y%m%d_%H%M%S)"
-        echo "Backing up $file to $backup"
-        cp "$file" "$backup"
-    fi
-}
 
 echo ""
 echo "Step 1: Installing CLAUDE.md..."
@@ -70,51 +199,42 @@ echo "  ✓ Scripts installed and made executable"
 
 echo ""
 echo "Step 5: Setting up hooks..."
-# Check if settings.json exists and has hooks configured
 SETTINGS_FILE="$CLAUDE_DIR/settings.json"
 if [ -f "$SETTINGS_FILE" ]; then
-    # Check if hooks are already configured
     if grep -q '"hooks"' "$SETTINGS_FILE" 2>/dev/null; then
         echo "  Hooks already configured in settings.json"
-        echo "  To add change logging, ensure this hook exists:"
-        echo '  {"event": "PostToolUse", "matcher": "Edit|Write", "command": "~/.claude/scripts/log-change.sh"}'
     else
-        echo "  Note: Add hooks to $SETTINGS_FILE manually or via Claude Code settings"
+        echo "  Note: Add hooks via Claude Code settings"
     fi
 else
-    echo "  Note: No settings.json found. Hooks will need to be configured via Claude Code."
-    echo "  Run: claude config set hooks '[{\"event\":\"PostToolUse\",\"matcher\":\"Edit|Write\",\"command\":\"~/.claude/scripts/log-change.sh\"}]'"
+    echo "  Note: Configure hooks via Claude Code:"
+    echo "  claude config set hooks '[{\"event\":\"PostToolUse\",\"matcher\":\"Edit|Write\",\"command\":\"~/.claude/scripts/log-change.sh\"}]'"
 fi
 
 echo ""
 echo "Step 6: Installing claude-mem plugin..."
-# Check if claude CLI is available
 if command -v claude &> /dev/null; then
-    # Add marketplace (|| true to not fail if already added)
     echo "  Adding marketplace..."
     claude plugin marketplace add thedotmack/claude-mem 2>/dev/null || true
 
-    # Update marketplace
     echo "  Updating marketplace..."
     claude plugin marketplace update thedotmack 2>/dev/null || true
 
-    # Install plugin
     echo "  Installing claude-mem..."
     if claude plugin install claude-mem@thedotmack 2>/dev/null; then
         echo "  ✓ claude-mem plugin installed"
     else
         echo "  Note: claude-mem may already be installed or requires manual installation"
-        echo "  Run manually: claude plugin install claude-mem@thedotmack"
     fi
 else
-    echo "  Claude CLI not found. Install claude-mem manually after installing Claude Code:"
+    echo "  Claude CLI not found. Install manually after installing Claude Code:"
     echo "  claude plugin marketplace add thedotmack/claude-mem"
     echo "  claude plugin install claude-mem@thedotmack"
 fi
-echo ""
 
+echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
-echo "║                   Installation Complete!                      ║"
+echo "║              Global Installation Complete!                    ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 echo "Installed to: $CLAUDE_DIR"
@@ -126,11 +246,9 @@ echo "  - skills/           (document, code-review, test-runner, git-workflow)"
 echo "  - scripts/          (log-change.sh, discover-services.sh, scan-env-vars.sh)"
 echo ""
 echo "Quick start:"
-echo "  1. Start Claude Code"
-echo "  2. Run: ~/.claude/scripts/discover-services.sh  (optional: discover existing projects)"
-echo "  3. Run: ~/.claude/scripts/scan-env-vars.sh      (optional: find env vars)"
+echo "  1. Start Claude Code in any project"
+echo "  2. For project-specific config: ./install.sh --project"
 echo ""
 echo "To sync across machines:"
-echo "  1. Commit changes to kron-claude repo"
-echo "  2. On new machine: git clone && ./install.sh"
+echo "  git clone https://github.com/Kron00/kron-claude.git && cd kron-claude && ./install.sh"
 echo ""
