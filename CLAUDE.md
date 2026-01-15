@@ -236,7 +236,13 @@ Enable with `/sandbox` command for untrusted codebases.
 ## Mistakes to Avoid
 
 Document recurring issues here so they don't repeat:
-- (Add mistakes as they occur)
+
+### Claude Code Agent Memory Leak (Known Bug)
+- **Issue**: Task tool agents spawned with `--resume` flag don't exit after completing
+- **Impact**: Each zombie agent consumes ~350-420MB RAM, accumulates over sessions
+- **Workaround**: SessionStart hook runs `cleanup-agents.sh` to kill orphaned agents
+- **Detection**: Run `ps aux | grep claude` - look for background processes with `?` tty
+- **Manual fix**: `pkill -f 'claude.*--resume'` kills zombie agents
 
 </mistakes-log>
 

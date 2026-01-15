@@ -199,16 +199,25 @@ echo "  ✓ Scripts installed and made executable"
 
 echo ""
 echo "Step 5: Setting up hooks..."
-SETTINGS_FILE="$CLAUDE_DIR/settings.json"
-if [ -f "$SETTINGS_FILE" ]; then
-    if grep -q '"hooks"' "$SETTINGS_FILE" 2>/dev/null; then
-        echo "  Hooks already configured in settings.json"
+if command -v claude &> /dev/null; then
+    # Define hooks: SessionStart for cleanup, PostToolUse for change logging
+    HOOKS_CONFIG='[
+        {"event":"SessionStart","command":"~/.claude/scripts/cleanup-agents.sh"},
+        {"event":"PostToolUse","matcher":"Edit|Write","command":"~/.claude/scripts/log-change.sh"}
+    ]'
+    # Minify for claude config (remove newlines and extra spaces)
+    HOOKS_MINIFIED=$(echo "$HOOKS_CONFIG" | tr -d '\n' | sed 's/  */ /g')
+
+    if claude config set hooks "$HOOKS_MINIFIED" 2>/dev/null; then
+        echo "  ✓ SessionStart hook: cleanup-agents.sh (kills zombie agent processes)"
+        echo "  ✓ PostToolUse hook: log-change.sh (logs file changes to KNOWLEDGE.md)"
     else
-        echo "  Note: Add hooks via Claude Code settings"
+        echo "  Note: Could not auto-configure hooks. Configure manually:"
+        echo "  claude config set hooks '$HOOKS_MINIFIED'"
     fi
 else
-    echo "  Note: Configure hooks via Claude Code:"
-    echo "  claude config set hooks '[{\"event\":\"PostToolUse\",\"matcher\":\"Edit|Write\",\"command\":\"~/.claude/scripts/log-change.sh\"}]'"
+    echo "  Note: Claude CLI not found. Configure hooks after installing Claude Code:"
+    echo "  claude config set hooks '[{\"event\":\"SessionStart\",\"command\":\"~/.claude/scripts/cleanup-agents.sh\"},{\"event\":\"PostToolUse\",\"matcher\":\"Edit|Write\",\"command\":\"~/.claude/scripts/log-change.sh\"}]'"
 fi
 
 echo ""
