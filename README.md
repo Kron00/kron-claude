@@ -138,8 +138,24 @@ No action needed - your config stays current automatically.
 | `/code-review` | "review this code", "check for bugs" | Security, performance, style review |
 | `/test-runner` | "run tests", "fix failing tests" | Execute and fix tests |
 | `/git-workflow` | "commit this", "create PR" | Safe git operations |
+| `/build-agent` | "build an agent", "create agent" | Generate ready-to-paste agent definitions |
 
 Skills are invoked automatically when relevant.
+
+### Agent Builder
+
+The `/build-agent` skill helps you create custom Claude Code agents:
+
+```
+User: "Build me an agent that reviews database queries"
+Claude: [Outputs complete agent definition ready to paste into ~/.claude/agents/]
+```
+
+Features:
+- 5-step design framework (purpose, model, tools, description, prompt)
+- Model selection guide (opus for complex, sonnet for standard, haiku for quick)
+- Tool selection patterns by agent type
+- 4 built-in templates (code-reviewer, feature-builder, researcher, test-runner)
 
 ---
 
