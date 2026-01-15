@@ -68,6 +68,7 @@ This creates a `.claude/` folder with project-specific config that overrides glo
 
 **Also installs:**
 - `claude-mem` plugin for automatic session memory
+- Cron job for auto-updates (checks every 10 minutes)
 
 ### Project Install (`kron-install --project`)
 
@@ -111,6 +112,15 @@ Claude assumes reasonable defaults instead of asking endless clarifying question
 - Requirements are genuinely ambiguous
 - Decisions have significant consequences
 - You explicitly asked for options
+
+### Auto-Updates
+
+A cron job checks for updates every 10 minutes. When updates are found:
+1. Pulls latest from GitHub
+2. Updates CLAUDE.md, skills, and scripts automatically
+3. Logs activity to `~/.claude/auto-update.log`
+
+No action needed - your config stays current automatically.
 
 ### Persistent Memory
 
@@ -227,10 +237,26 @@ nano .claude/CLAUDE.md    # Edit with project details
 
 ## Updating
 
+### Automatic (Default)
+
+Updates happen automatically every 10 minutes via cron. Check the log:
+```bash
+cat ~/.claude/auto-update.log
+```
+
+### Manual
+
 ```bash
 cd ~/Documents/projects/kron-claude
 git pull
 kron-install
+```
+
+### Disable Auto-Updates
+
+```bash
+crontab -e
+# Remove the line containing "kron-claude auto-update"
 ```
 
 ## Uninstalling

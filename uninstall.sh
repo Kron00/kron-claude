@@ -41,12 +41,30 @@ for skill in document code-review test-runner git-workflow; do
 done
 
 # Remove scripts
-for script in log-change.sh discover-services.sh scan-env-vars.sh; do
+for script in log-change.sh discover-services.sh scan-env-vars.sh auto-update.sh; do
     if [ -f "$CLAUDE_DIR/scripts/$script" ]; then
         rm "$CLAUDE_DIR/scripts/$script"
         echo "  ✓ Removed script: $script"
     fi
 done
+
+# Remove kron-install symlink
+if [ -L "$HOME/bin/kron-install" ]; then
+    rm "$HOME/bin/kron-install"
+    echo "  ✓ Removed ~/bin/kron-install symlink"
+fi
+
+# Remove auto-update cron job
+if crontab -l 2>/dev/null | grep -q "kron-claude auto-update"; then
+    crontab -l 2>/dev/null | grep -v "kron-claude auto-update" | grep -v "auto-update.sh" | crontab -
+    echo "  ✓ Removed auto-update cron job"
+fi
+
+# Remove auto-update log
+if [ -f "$CLAUDE_DIR/auto-update.log" ]; then
+    rm "$CLAUDE_DIR/auto-update.log"
+    echo "  ✓ Removed auto-update.log"
+fi
 
 echo ""
 echo "Preserved:"

@@ -263,6 +263,21 @@ if [ -n "$SHELL_RC" ]; then
 fi
 
 echo ""
+echo "Step 8: Setting up auto-updates (cron)..."
+CRON_CMD="*/10 * * * * $HOME/.claude/scripts/auto-update.sh >/dev/null 2>&1"
+CRON_MARKER="# kron-claude auto-update"
+
+# Check if cron job already exists
+if crontab -l 2>/dev/null | grep -q "kron-claude auto-update"; then
+    echo "  Auto-update cron job already exists"
+else
+    # Add cron job
+    (crontab -l 2>/dev/null || true; echo "$CRON_MARKER"; echo "$CRON_CMD") | crontab -
+    echo "  ✓ Added cron job (checks for updates every 10 minutes)"
+fi
+echo "  Log file: ~/.claude/auto-update.log"
+
+echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
 echo "║              Global Installation Complete!                    ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
