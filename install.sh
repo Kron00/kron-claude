@@ -233,6 +233,36 @@ else
 fi
 
 echo ""
+echo "Step 7: Setting up kron-install command..."
+mkdir -p "$HOME/bin"
+ln -sf "$SCRIPT_DIR/install.sh" "$HOME/bin/kron-install"
+echo "  ✓ Created ~/bin/kron-install symlink"
+
+# Add ~/bin to PATH if not already there
+SHELL_RC=""
+if [ -n "$BASH_VERSION" ]; then
+    SHELL_RC="$HOME/.bashrc"
+elif [ -n "$ZSH_VERSION" ]; then
+    SHELL_RC="$HOME/.zshrc"
+else
+    # Fallback to checking $SHELL
+    case "$(basename "$SHELL")" in
+        bash) SHELL_RC="$HOME/.bashrc" ;;
+        zsh)  SHELL_RC="$HOME/.zshrc" ;;
+    esac
+fi
+
+if [ -n "$SHELL_RC" ]; then
+    if ! grep -q 'export PATH="$HOME/bin:$PATH"' "$SHELL_RC" 2>/dev/null; then
+        echo 'export PATH="$HOME/bin:$PATH"' >> "$SHELL_RC"
+        echo "  ✓ Added ~/bin to PATH in $SHELL_RC"
+        NEED_SOURCE=true
+    else
+        echo "  ~/bin already in PATH"
+    fi
+fi
+
+echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
 echo "║              Global Installation Complete!                    ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
@@ -244,10 +274,16 @@ echo "  - CLAUDE.md         (main configuration)"
 echo "  - KNOWLEDGE.md      (persistent memory/service registry)"
 echo "  - skills/           (document, code-review, test-runner, git-workflow)"
 echo "  - scripts/          (log-change.sh, discover-services.sh, scan-env-vars.sh)"
+echo "  - ~/bin/kron-install (symlink for easy access)"
 echo ""
-echo "Quick start:"
-echo "  1. Start Claude Code in any project"
-echo "  2. For project-specific config: ./install.sh --project"
+if [ "$NEED_SOURCE" = true ]; then
+echo "IMPORTANT: Run this to activate kron-install command:"
+echo "  source $SHELL_RC"
+echo ""
+fi
+echo "Usage:"
+echo "  kron-install           # Global install (re-run to update)"
+echo "  kron-install --project # Project install (run in any project folder)"
 echo ""
 echo "To sync across machines:"
 echo "  git clone https://github.com/Kron00/kron-claude.git && cd kron-claude && ./install.sh"
