@@ -87,10 +87,30 @@ else
 fi
 
 echo ""
-echo "Step 6: Optional MCP Memory Server..."
-echo "  For automatic memory capture, install one of:"
-echo "  - claude-mem: /plugin marketplace add thedotmack/claude-mem && /plugin install claude-mem"
-echo "  - memory-keeper: claude mcp add memory-keeper npx mcp-memory-keeper"
+echo "Step 6: Installing claude-mem plugin..."
+# Check if claude CLI is available
+if command -v claude &> /dev/null; then
+    # Add marketplace (|| true to not fail if already added)
+    echo "  Adding marketplace..."
+    claude plugin marketplace add thedotmack/claude-mem 2>/dev/null || true
+
+    # Update marketplace
+    echo "  Updating marketplace..."
+    claude plugin marketplace update thedotmack 2>/dev/null || true
+
+    # Install plugin
+    echo "  Installing claude-mem..."
+    if claude plugin install claude-mem@thedotmack 2>/dev/null; then
+        echo "  ✓ claude-mem plugin installed"
+    else
+        echo "  Note: claude-mem may already be installed or requires manual installation"
+        echo "  Run manually: claude plugin install claude-mem@thedotmack"
+    fi
+else
+    echo "  Claude CLI not found. Install claude-mem manually after installing Claude Code:"
+    echo "  claude plugin marketplace add thedotmack/claude-mem"
+    echo "  claude plugin install claude-mem@thedotmack"
+fi
 echo ""
 
 echo "╔══════════════════════════════════════════════════════════════╗"

@@ -83,17 +83,17 @@ Add to Claude Code settings:
 claude config set hooks '[{"event":"PostToolUse","matcher":"Edit|Write","command":"~/.claude/scripts/log-change.sh"}]'
 ```
 
-## Optional: MCP Memory Server
+## Auto-Installed: claude-mem Plugin
 
-For fully automatic memory capture across sessions:
+The install script automatically installs **claude-mem** for full memory capture across sessions. This plugin:
+- Captures everything Claude does during sessions
+- Compresses and stores context
+- Injects relevant context back in future sessions
 
+If auto-install fails, run manually:
 ```bash
-# Option 1: claude-mem (captures everything automatically)
-/plugin marketplace add thedotmack/claude-mem
-/plugin install claude-mem
-
-# Option 2: memory-keeper (simple persistent storage)
-claude mcp add memory-keeper npx mcp-memory-keeper
+claude plugin marketplace add thedotmack/claude-mem
+claude plugin install claude-mem@thedotmack
 ```
 
 ## Syncing Across Machines
