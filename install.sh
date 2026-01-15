@@ -226,6 +226,13 @@ if command -v claude &> /dev/null; then
     else
         echo "  Note: claude-mem may already be installed or requires manual installation"
     fi
+
+    # Ensure bun is accessible for hooks (claude-mem uses bun)
+    if [ -f "$HOME/.bun/bin/bun" ] && [ ! -f "$HOME/.local/bin/bun" ]; then
+        mkdir -p "$HOME/.local/bin"
+        ln -sf "$HOME/.bun/bin/bun" "$HOME/.local/bin/bun"
+        echo "  ✓ Created bun symlink in ~/.local/bin (required for hooks)"
+    fi
 else
     echo "  Claude CLI not found. Install manually after installing Claude Code:"
     echo "  claude plugin marketplace add thedotmack/claude-mem"
