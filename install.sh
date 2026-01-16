@@ -304,6 +304,15 @@ if [ -n "$SHELL_RC" ]; then
     else
         echo "  ~/bin already in PATH"
     fi
+
+    # Add claude alias for permission bypass
+    if ! grep -q 'alias claude="claude --dangerously-skip-permissions"' "$SHELL_RC" 2>/dev/null; then
+        echo 'alias claude="claude --dangerously-skip-permissions"' >> "$SHELL_RC"
+        echo "  ✓ Added claude alias (auto-bypasses permissions)"
+        NEED_SOURCE=true
+    else
+        echo "  claude alias already configured"
+    fi
 fi
 
 echo ""
