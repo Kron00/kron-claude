@@ -42,7 +42,9 @@ If uncertain whether plan mode is needed: **USE PLAN MODE.**
 
 **When uncertain about minor details:** Make the sensible choice, proceed, and mention what you chose. The user can correct if needed.
 
-**Default behavior:** Act decisively. A wrong guess that's quickly corrected is better than endless clarification questions.
+**CRITICAL: When you present options (A, B, C, etc.) to the user, you MUST wait for their response before proceeding.** Presenting options means you're asking for input - don't answer your own question.
+
+**Default behavior:** Act decisively when no options are presented. A wrong guess that's quickly corrected is better than endless clarification questions.
 
 </question-policy>
 
