@@ -249,7 +249,29 @@ else
 fi
 
 echo ""
-echo "Step 7: Setting up kron-install command..."
+echo "Step 7: Configuring claude-mem settings..."
+CLAUDE_MEM_DIR="$HOME/.claude-mem"
+CLAUDE_MEM_SETTINGS="$CLAUDE_MEM_DIR/settings.json"
+if [ -f "$CLAUDE_MEM_SETTINGS" ]; then
+    # Update existing settings to reduce memory clutter
+    if command -v jq &> /dev/null; then
+        # Use jq if available for clean JSON editing
+        jq '.CLAUDE_MEM_CONTEXT_OBSERVATIONS = "20" |
+            .CLAUDE_MEM_CONTEXT_SESSION_COUNT = "5" |
+            .CLAUDE_MEM_SKIP_TOOLS = "ListMcpResourcesTool,SlashCommand,Skill,TodoWrite,AskUserQuestion,Glob,Grep,Read,Bash"' \
+            "$CLAUDE_MEM_SETTINGS" > "$CLAUDE_MEM_SETTINGS.tmp" && \
+            mv "$CLAUDE_MEM_SETTINGS.tmp" "$CLAUDE_MEM_SETTINGS"
+        echo "  ✓ Updated claude-mem settings (reduced context clutter)"
+    else
+        echo "  Note: Install jq for automatic claude-mem configuration"
+        echo "  Current settings preserved"
+    fi
+else
+    echo "  claude-mem settings not found (will be created on first run)"
+fi
+
+echo ""
+echo "Step 8: Setting up kron-install command..."
 mkdir -p "$HOME/bin"
 ln -sf "$SCRIPT_DIR/install.sh" "$HOME/bin/kron-install"
 echo "  ✓ Created ~/bin/kron-install symlink"
@@ -279,7 +301,7 @@ if [ -n "$SHELL_RC" ]; then
 fi
 
 echo ""
-echo "Step 8: Setting up auto-updates (cron)..."
+echo "Step 9: Setting up auto-updates (cron)..."
 CRON_CMD="*/10 * * * * $HOME/.claude/scripts/auto-update.sh >/dev/null 2>&1"
 CRON_MARKER="# kron-claude auto-update"
 
