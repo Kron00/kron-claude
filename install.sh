@@ -198,28 +198,32 @@ chmod +x "$CLAUDE_DIR/scripts/"*.sh
 echo "  ✓ Scripts installed and made executable"
 
 echo ""
-echo "Step 5: Setting up hooks..."
-if command -v claude &> /dev/null; then
-    # Define hooks with full expanded paths
-    CLEANUP_SCRIPT="$HOME/.claude/scripts/cleanup-agents.sh"
-    LOGCHANGE_SCRIPT="$HOME/.claude/scripts/log-change.sh"
+echo "Step 5: Setting up hooks and permissions..."
+SETTINGS_FILE="$CLAUDE_DIR/settings.json"
+CLEANUP_SCRIPT="$HOME/.claude/scripts/cleanup-agents.sh"
+LOGCHANGE_SCRIPT="$HOME/.claude/scripts/log-change.sh"
 
-    HOOKS_CONFIG="[{\"event\":\"SessionStart\",\"command\":\"$CLEANUP_SCRIPT\"},{\"event\":\"PostToolUse\",\"matcher\":\"Edit|Write\",\"command\":\"$LOGCHANGE_SCRIPT\"}]"
+# Create settings.json if it doesn't exist
+if [ ! -f "$SETTINGS_FILE" ]; then
+    echo '{}' > "$SETTINGS_FILE"
+fi
 
-    if claude config set hooks "$HOOKS_CONFIG" 2>/dev/null; then
-        echo "  ✓ SessionStart hook: cleanup-agents.sh (kills zombie agent processes)"
-        echo "  ✓ PostToolUse hook: log-change.sh (logs file changes to KNOWLEDGE.md)"
-    else
-        echo "  Note: Could not auto-configure hooks. Configure manually:"
-        echo "  claude config set hooks '$HOOKS_CONFIG'"
-    fi
-
-    # Add scripts to allowed commands for permission-free execution
-    echo "  Adding scripts to allowed commands..."
-    claude config set allowedCommands "[$CLEANUP_SCRIPT, $LOGCHANGE_SCRIPT]" 2>/dev/null || true
+if command -v jq &> /dev/null; then
+    # Use jq to properly merge hooks and permissions into settings.json
+    jq --arg cleanup "$CLEANUP_SCRIPT" --arg logchange "$LOGCHANGE_SCRIPT" '
+        .hooks = {
+            "SessionStart": [{"hooks": [{"type": "command", "command": $cleanup}]}],
+            "PostToolUse": [{"matcher": "Edit|Write", "hooks": [{"type": "command", "command": $logchange}]}]
+        } |
+        .permissions = (.permissions // {}) |
+        .permissions.allow = ((.permissions.allow // []) + ["Bash(" + $cleanup + ")", "Bash(" + $logchange + ")"]) | unique
+    ' "$SETTINGS_FILE" > "$SETTINGS_FILE.tmp" && mv "$SETTINGS_FILE.tmp" "$SETTINGS_FILE"
+    echo "  ✓ SessionStart hook: cleanup-agents.sh (kills zombie agent processes)"
+    echo "  ✓ PostToolUse hook: log-change.sh (logs file changes to KNOWLEDGE.md)"
+    echo "  ✓ Scripts added to permissions.allow for auto-approval"
 else
-    echo "  Note: Claude CLI not found. Configure hooks after installing Claude Code:"
-    echo "  claude config set hooks '[{\"event\":\"SessionStart\",\"command\":\"$HOME/.claude/scripts/cleanup-agents.sh\"},{\"event\":\"PostToolUse\",\"matcher\":\"Edit|Write\",\"command\":\"$HOME/.claude/scripts/log-change.sh\"}]'"
+    echo "  Note: jq not found. Install jq for automatic hook configuration, or add manually:"
+    echo "  Edit $SETTINGS_FILE to add hooks configuration"
 fi
 
 echo ""
