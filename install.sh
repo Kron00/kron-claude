@@ -200,24 +200,26 @@ echo "  ✓ Scripts installed and made executable"
 echo ""
 echo "Step 5: Setting up hooks..."
 if command -v claude &> /dev/null; then
-    # Define hooks: SessionStart for cleanup, PostToolUse for change logging
-    HOOKS_CONFIG='[
-        {"event":"SessionStart","command":"~/.claude/scripts/cleanup-agents.sh"},
-        {"event":"PostToolUse","matcher":"Edit|Write","command":"~/.claude/scripts/log-change.sh"}
-    ]'
-    # Minify for claude config (remove newlines and extra spaces)
-    HOOKS_MINIFIED=$(echo "$HOOKS_CONFIG" | tr -d '\n' | sed 's/  */ /g')
+    # Define hooks with full expanded paths
+    CLEANUP_SCRIPT="$HOME/.claude/scripts/cleanup-agents.sh"
+    LOGCHANGE_SCRIPT="$HOME/.claude/scripts/log-change.sh"
 
-    if claude config set hooks "$HOOKS_MINIFIED" 2>/dev/null; then
+    HOOKS_CONFIG="[{\"event\":\"SessionStart\",\"command\":\"$CLEANUP_SCRIPT\"},{\"event\":\"PostToolUse\",\"matcher\":\"Edit|Write\",\"command\":\"$LOGCHANGE_SCRIPT\"}]"
+
+    if claude config set hooks "$HOOKS_CONFIG" 2>/dev/null; then
         echo "  ✓ SessionStart hook: cleanup-agents.sh (kills zombie agent processes)"
         echo "  ✓ PostToolUse hook: log-change.sh (logs file changes to KNOWLEDGE.md)"
     else
         echo "  Note: Could not auto-configure hooks. Configure manually:"
-        echo "  claude config set hooks '$HOOKS_MINIFIED'"
+        echo "  claude config set hooks '$HOOKS_CONFIG'"
     fi
+
+    # Add scripts to allowed commands for permission-free execution
+    echo "  Adding scripts to allowed commands..."
+    claude config set allowedCommands "[$CLEANUP_SCRIPT, $LOGCHANGE_SCRIPT]" 2>/dev/null || true
 else
     echo "  Note: Claude CLI not found. Configure hooks after installing Claude Code:"
-    echo "  claude config set hooks '[{\"event\":\"SessionStart\",\"command\":\"~/.claude/scripts/cleanup-agents.sh\"},{\"event\":\"PostToolUse\",\"matcher\":\"Edit|Write\",\"command\":\"~/.claude/scripts/log-change.sh\"}]'"
+    echo "  claude config set hooks '[{\"event\":\"SessionStart\",\"command\":\"$HOME/.claude/scripts/cleanup-agents.sh\"},{\"event\":\"PostToolUse\",\"matcher\":\"Edit|Write\",\"command\":\"$HOME/.claude/scripts/log-change.sh\"}]'"
 fi
 
 echo ""
