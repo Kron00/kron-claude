@@ -94,34 +94,6 @@ For questions requiring information gathering:
 
 </agent-usage>
 
-<memory-system>
-
-## Memory & Knowledge System
-
-Claude uses a persistent knowledge system to remember services, track changes, and maintain context.
-
-### Knowledge File
-Location: `~/.claude/KNOWLEDGE.md`
-
-This file contains:
-- **Services Registry**: All services, their tech stacks, ports, and paths
-- **Environment Variables**: Documented env vars across projects
-- **Recent Changes Log**: Auto-logged changes from hooks
-- **Decisions Made**: Architectural decisions and their rationale
-
-### Updating Knowledge
-
-When you discover new information about the user's setup:
-1. Update KNOWLEDGE.md with the new information
-2. Keep entries concise and structured
-3. Include timestamps for changes
-
-### Auto-Logging
-
-PostToolUse hooks automatically log changes to KNOWLEDGE.md when files are edited or created.
-
-</memory-system>
-
 <skills-system>
 
 ## Skills System
@@ -164,7 +136,8 @@ Hooks automate actions in response to Claude Code events.
 9. **SkillInvoke** - Skill activated
 
 ### Active Hooks
-- **PostToolUse (Edit|Write)**: Logs changes to KNOWLEDGE.md
+- **SessionStart**: Project initialization (if needed)
+- **Stop**: Git status check reminder
 
 </hooks-system>
 
@@ -256,7 +229,6 @@ Document recurring issues here so they don't repeat:
 2. **Launch 5 parallel agents** for research/exploration
 3. **Assume reasonable defaults** - don't over-question
 4. **Execute with TodoWrite tracking**
-5. **Update KNOWLEDGE.md** with new discoveries
-6. **Document mistakes** in mistakes-log section
+5. **Document mistakes** in mistakes-log section
 
 </workflow>
