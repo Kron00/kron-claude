@@ -116,13 +116,25 @@ rm -f "$CLAUDE_DIR/auto-update.log" 2>/dev/null || true
 echo "  ✓ Removed auto-update.log"
 
 #######################################
+# REMOVE SETTINGS AND KNOWLEDGE
+#######################################
+echo ""
+echo "Step 8: Removing settings and knowledge files..."
+if [ -f "$CLAUDE_DIR/settings.json" ]; then
+    rm -f "$CLAUDE_DIR/settings.json"
+    echo "  ✓ Removed settings.json"
+fi
+if [ -f "$CLAUDE_DIR/KNOWLEDGE.md" ]; then
+    rm -f "$CLAUDE_DIR/KNOWLEDGE.md"
+    echo "  ✓ Removed KNOWLEDGE.md"
+fi
+
+#######################################
 # PRESERVE USER DATA
 #######################################
 echo ""
 echo "Preserved (not deleted):"
 echo "  - ~/.claude/CLAUDE.md (your configuration)"
-echo "  - ~/.claude/KNOWLEDGE.md (your data)"
-echo "  - ~/.claude/settings.json (Claude Code settings)"
 echo "  - Other Claude Code data and plugins"
 
 echo ""

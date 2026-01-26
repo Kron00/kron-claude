@@ -37,10 +37,15 @@ echo '{"hooks":{}}' > ~/.claude/hooks.json
 
 The hooks and plugins caused freezing issues in Claude Code. The auto-update cron job was also problematic.
 
+## What's Removed
+
+The cleanup removes:
+- `~/.claude/settings.json` - Claude Code settings
+- `~/.claude/KNOWLEDGE.md` - kron-claude memory file
+- All kron-claude scripts, skills, hooks, plugins
+
 ## What's Preserved
 
 The cleanup does NOT delete:
 - `~/.claude/CLAUDE.md` - your configuration
-- `~/.claude/KNOWLEDGE.md` - your accumulated data
-- `~/.claude/settings.json` - Claude Code settings
 - Other Claude Code plugins and data
